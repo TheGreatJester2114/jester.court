@@ -1,0 +1,122 @@
+import javafx.animation.AnimationTimer;
+import javafx.application.Application;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PlatformerGame extends Application {
+
+    // Constants
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 600;
+    private static final int PLATFORM_WIDTH = 100;
+    private static final int PLATFORM_HEIGHT = 20;
+    private static final int PLAYER_WIDTH = 50;
+    private static final int PLAYER_HEIGHT = 50;
+    private static final int COIN_WIDTH = 20;
+    private static final int COIN_HEIGHT = 20;
+
+    // Variables
+    private boolean leftPressed = false;
+    private boolean rightPressed = false;
+    private boolean jumpPressed = false;
+    private boolean jumping = false;
+    private boolean gameOver = false;
+    private int score = 0;
+    private int level = 1;
+
+    // Game objects
+    private List<Platform> platforms = new ArrayList<>();
+    private List<Coin> coins = new ArrayList<>();
+    private Player player;
+
+    // Images
+    private Image platformImage;
+    private Image playerImage;
+    private Image coinImage;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // Load images
+        platformImage = new Image(getClass().getResourceAsStream("platform.png"));
+        playerImage = new Image(getClass().getResourceAsStream("player.png"));
+        coinImage = new Image(getClass().getResourceAsStream("coin.png"));
+
+        // Create game objects
+        player = new Player(0, HEIGHT - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, 0, 0);
+
+        // Generate platforms
+        generatePlatforms();
+
+        // Generate coins
+        generateCoins();
+
+        // Set up the game scene
+        Group root = new Group();
+        Canvas canvas = new Canvas(WIDTH, HEIGHT);
+        root.getChildren().add(canvas);
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        // Handle input events
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.LEFT) {
+                leftPressed = true;
+            } else if (event.getCode() == KeyCode.RIGHT) {
+                rightPressed = true;
+            } else if (event.getCode() == KeyCode.UP) {
+                jumpPressed = true;
+            }
+        });
+
+        scene.setOnKeyReleased(event -> {
+            if (event.getCode() == KeyCode.LEFT) {
+                leftPressed = false;
+            } else if (event.getCode() == KeyCode.RIGHT) {
+                rightPressed = false;
+            } else if (event.getCode() == KeyCode.UP) {
+                jumpPressed = false;
+            }
+        });
+
+        // Set up the game loop
+        AnimationTimer gameLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                // Handle input
+                handleInput();
+
+                // Update game objects
+                update();
+
+                // Render the game
+                render(canvas.getGraphicsContext2D());
+
+                // Check for game over
+                if (player.getY() > HEIGHT) {
+                    gameOver = true;
+                }
+
+                if (gameOver) {
+                    stop();
+                }
+            }
+        };
+        gameLoop.start();
+    }
+
+    private void generatePlatforms() {
+        platforms.add(new Platform(0, HEIGHT - 100, PLATFORM_WIDTH, PLATFORM_HEIGHT));
+        platforms
